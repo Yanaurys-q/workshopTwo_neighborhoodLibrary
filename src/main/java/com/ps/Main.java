@@ -1,6 +1,7 @@
 package com.ps;
 
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Scanner;
 
@@ -30,14 +31,14 @@ class Book
 
     public void checkOut(String name)
     {
-        if (isCheckedOut)
+        if (!isCheckedOut)
         {
             isCheckedOut = true;
             checkedOutTo = name;
-            System.out.println("Book checked out successfully.");
+            System.out.println("Book '" + title + "' checked out successfully to " + name + ".");
         } else
         {
-            System.out.println("Book is already checked out.");
+            System.out.println("Book '" + title + "' is already checked out.");
         }
     }
 
@@ -48,37 +49,40 @@ class Book
         {
             isCheckedOut = false;
             checkedOutTo = "";
-            System.out.println("Book checked in successfully.");
+            System.out.println("Book '" + title + "' checked in successfully.");
         } else
         {
-            System.out.println("Book is not checked out.");
+            System.out.println("Book '" + title + "' is not checked out.");
         }
     }
 }
 
 
-public class Main {
+public class Main
+{
     private static final int INVENTORY_SIZE = 20;
     private static List<Book> inventory = new ArrayList<>(INVENTORY_SIZE);
+    private static Scanner scanner;
 
     public static void main(String[] args)
     {
         initializeInventory();
 
-        Scanner scanner = new Scanner(System.in);
+         scanner = new Scanner(System.in);
         boolean running = true;
 
-        while (running) {
+        while (running)
+        {
             System.out.println("Welcome to the Neighborhood Library!");
             System.out.println("1. Show Available Books");
             System.out.println("2. Show Checked Out Books");
             System.out.println("3. Exit");
             System.out.print("Choose an option: ");
 
-            int givenCommand = scanner.nextInt();
-            scanner.nextLine();
+            int givenCommand = getValidIntegerInput();
 
-            switch (givenCommand) {
+            switch (givenCommand)
+            {
                 case 1:
                     showAvailableBooks();
                     break;
@@ -92,7 +96,7 @@ public class Main {
                     System.out.println("Invalid option. Please try again.");
             }
         }
-            scanner.close();
+        scanner.close();
     }
 
     private static void initializeInventory() {
@@ -108,44 +112,90 @@ public class Main {
         inventory.add(new Book(10, "978-0765378484", "The Bands of Mourning"));
         inventory.add(new Book(11, "978-0765391179", "Warbreaker"));
         inventory.add(new Book(12, "978-0765320322", "Elantris"));
-        inventory.add(new Book(13, "978-0765399830", "Skyward"));
+        inventory.add(new Book(13, "978-0765399837", "Skyward"));
         inventory.add(new Book(14, "978-0399555770", "Starsight"));
         inventory.add(new Book(15, "978-0765399847", "Cytonic"));
         inventory.add(new Book(16, "978-1947954661", "Dawnshard"));
         inventory.add(new Book(17, "978-0765399830", "Edgedancer"));
-        inventory.add(new Book(18, "978-0765399830", "Shadows for Silence in the Forests of Hell"));
-        inventory.add(new Book(19, "978-0765399830", "Sixth of the Dusk"));
-        inventory.add(new Book(20, "978-0765399830", "The Emperor's Soul"));
+        inventory.add(new Book(18, "978-0765399832", "Shadows for Silence in the Forests of Hell"));
+        inventory.add(new Book(19, "978-0765399838", "Sixth of the Dusk"));
+        inventory.add(new Book(20, "978-0765399839", "The Emperor's Soul"));
 
     }
 
     private static void showAvailableBooks()
     {
-        StringBuilder availableBooks = new StringBuilder("Available Books: ");
+        System.out.println("Available Books: ");
+        boolean anyAvailable = false;
         for (Book book : inventory)
         {
             if (!book.isCheckedOut())
             {
-                StringBuilder append = availableBooks.append("ID: ").append(book.getId())
-                        .append(", ISBN: ").append(book.getIsbn())
-                        .append(", Title: ").append(book.getTitle())
-                        .append("\n");
+                System.out.println("ID: " + book.getId() + ", ISBN: " + book.getIsbn() + ", Title: " + book.getTitle());
+                anyAvailable = true;
             }
         }
-        System.out.println(availableBooks.toString());
+        if (!anyAvailable)
+        {
+            System.out.println("No books are currently available.");
+        }
+
+        System.out.print("Enter the ID of the book to check out or 0 to return to the home screen: ");
+        int bookId = getValidIntegerInput();
+
+        if (bookId > 0 && bookId <= inventory.size()) {
+            System.out.print("Enter your name to check out the book: ");
+            String name = scanner.nextLine();
+            inventory.get(bookId - 1).checkOut(name);
+        }
+
     }
-    private static void showCheckedOutBooks() {
-        StringBuilder checkedOutBooks = new StringBuilder("Checked Out Books: ");
-        for (Book book : inventory) {
-            if (book.isCheckedOut()) {
-                checkedOutBooks.append("ID: ").append(book.getId())
-                        .append(", ISBN: ").append(book.getIsbn())
-                        .append(", Title: ").append(book.getTitle())
-                        .append(", Checked out to: ").append(book.getCheckedOutTo())
-                        .append("\n");
+    private static void showCheckedOutBooks()
+    {
+        System.out.println("Checked Out Books:");
+        boolean anyCheckedOut = false;
+
+        for (Book book : inventory)
+        {
+            if (book.isCheckedOut())
+            {
+                System.out.println("ID: " + book.getId() + ", ISBN: " + book.getIsbn() + ", Title: " + book.getTitle() + ", Checked out to: " + book.getCheckedOutTo());
+                anyCheckedOut = true;
             }
         }
-        System.out.println(checkedOutBooks.toString());
+        if (!anyCheckedOut)
+        {
+            System.out.println("No books are currently checked out.");
+        }
+
+        System.out.print("Enter the ID of the book to check in or 0 to return to the home screen: ");
+
+        int bookId = getValidIntegerInput();
+
+        if (bookId > 0 && bookId <= inventory.size()) {
+            inventory.get(bookId - 1).checkIn();
+        }
     }
+
+    private static int getValidIntegerInput()
+    {
+        int input = -1;
+        boolean valid = false;
+        while (!valid)
+        {
+            try
+            {
+                input = scanner.nextInt();
+                scanner.nextLine();
+                valid = true;
+            } catch (InputMismatchException exception)
+            {
+                System.out.println("Invalid input. Please enter a number.");
+                scanner.nextLine();
+            }
+        }
+        return input;
+    }
+
 }
 
